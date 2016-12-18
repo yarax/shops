@@ -1,0 +1,1 @@
+update categories set watch=true where id=16;

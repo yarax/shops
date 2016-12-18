@@ -4,23 +4,11 @@ const cheerio = require('cheerio');
 const pgp = require('pg-promise')();
 const rp = require('request-promise');
 const Promise = require('bluebird');
-const url = 'http://www2.hm.com/ru_ru/index.html';
+const shopUrl = 'http://www2.hm.com';
+const url = `${shopUrl}/ru_ru/index.html`;
 const catRgxp = 'ru_ru/(muzhchiny|zhenshchiny)/(.*?)/(.*?)\.html'; 
 const shopName = 'H&M';
-const db = pgp('postgres://rax:@localhost:5432/shops');
-const qbQuery = db.query;
-
-function getShopId(shopName) {
-  return db.one('select id from shops where name=${shopName}', {shopName}).then(res => {
-    return res.id;
-  });
-}
-
-function checkDublicate(e) {
-  if (!e.message.match(/duplicate/)) {
-    throw new Error(e);
-  }
-}
+const {db, getShopId, checkDublicate} = require('../../libs');
 
 function createCategory(shopId, name, url, pid) {
   // @TODO url can be updated
@@ -32,6 +20,10 @@ function createCategory(shopId, name, url, pid) {
   }).then(res => {
     console.log(res);
   }).catch(checkDublicate)
+}
+
+function normalizeUrl(path) {
+  return `${shopUrl}${path}`;
 }
 
 function getParent(mask) {
@@ -50,7 +42,7 @@ function run(shopId) {
   }).then(res => {
     const $ = cheerio.load(res);
     $('a').each(function (i, elem) {
-      const link = $(this).attr('href');
+      const link = normalizeUrl($(this).attr('href'));
       const text = $(this).text().trim();
       const r = new RegExp(catRgxp);
       const m = link.match(r);
