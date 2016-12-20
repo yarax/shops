@@ -1,5 +1,6 @@
 const pgp = require('pg-promise')();
 const connection = 'postgres://rax:@localhost:5432/shops';
+const rp = require('request-promise');
 const db = pgp(connection);
 
 module.exports = {
@@ -10,9 +11,12 @@ module.exports = {
             return res.id;
         });
     },
-    checkDublicate: () => {
+    checkDublicate: (e) => {
         if (!e.message.match(/duplicate/)) {
             throw new Error(e);
         }
+    },
+    fetch: (url) => {
+        return rp({url});
     }
 }

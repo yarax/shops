@@ -15,5 +15,8 @@
     "promise-request": "^0.1.2",
     "request": "^2.79.0",
     "request-promise": "^4.1.1"
+  },
+  "devDependencies": {
+    "mocha": "^3.2.0"
   }
 }
