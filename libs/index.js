@@ -18,5 +18,9 @@ module.exports = {
     },
     fetch: (url) => {
         return rp({url});
+    },
+    clearPrice: (str) => {
+        if (!str) return 0;
+        return str.replace(/[^0-9]*/g, '');
     }
 }
