@@ -1,5 +1,6 @@
 const pgp = require('pg-promise')();
-const connection = 'postgres://rax:@localhost:5432/shops';
+const fs = require('fs');
+const connection = fs.readFileSync('../pg.conf').toString();
 const rp = require('request-promise');
 const db = pgp(connection);
 
