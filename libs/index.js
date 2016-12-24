@@ -22,5 +22,10 @@ module.exports = {
     clearPrice: (str) => {
         if (!str) return 0;
         return str.replace(/[^0-9]*/g, '');
+    },
+    notify: (str) => {
+        return rp({
+            url: `http://bot.yarax.ru/send?chat=rax_test_group&message=${str}`
+        })
     }
 }

@@ -7,7 +7,7 @@ const Promise = require('bluebird');
 const url = 'http://www2.hm.com/ru_ru/index.html';
 const catRgxp = 'ru_ru/(muzhchiny|zhenshchiny)/(.*?)/(.*?)\.html'; 
 const shopName = 'H&M';
-const {clearPrice, db, getShopId, checkDublicate, fetch} = require('../../libs');
+const {clearPrice, db, getShopId, checkDublicate, fetch, notify} = require('../../libs');
 
 function getWatchedCategories(shopId) {
     return db.query('select id, url from categories where watch=true and shop_id=${shop_id}', {shop_id: shopId});;
@@ -52,9 +52,21 @@ function getAllItems(html) {
   return res;
 }
 
-function createItem(shopId, catId) {
-  return (item) => {
-    // @TODO check changes
+function getItem(name, url, catId, shopId) {
+  return db.query('select id, price, old_price from items where name=${name} and url=${url} and cat_id=${catId} and shop_id=${shopId}', {
+    name,
+    url,
+    catId,
+    shopId
+  }).then(res => {
+    if (res.length) {
+      return res[0];
+    }
+    return false;
+  });
+}
+
+function createItem(item, shopId, catId) {
     return db.query('insert into items (name, shop_id, cat_id, url, pic, old_price, price) values (${name}, ${shop_id}, ${cat_id}, ${url}, ${pic}, ${old_price}, ${price}) RETURNING id', {
       shop_id: shopId,
       name: item.name,
@@ -64,9 +76,22 @@ function createItem(shopId, catId) {
       old_price: item.oldPrice,
       price: item.price
     }).then(res => {
-      console.log('Created: ', item.name, url);
+      console.log('Created: ', item.name, item.url);
       return res[0].id;
     }).catch(checkDublicate);
+}
+
+function processItem(shopId, catId) {
+  return (item) => {
+    return getItem(item.name, item.url, catId, shopId).then(oldItem => {
+      if (!oldItem) {
+        return createItem(item, shopId, catId);
+      } else if (item.price != oldItem.price) {
+        return notify(`${item.name} has a new price ${oldItem.price}=>${item.price} ${item.url}`);
+      } else {
+        return null; // nothing happend
+      }
+    });
   }
 }
 
@@ -76,7 +101,7 @@ function run(shopId, catId, catUrl) {
   .then(loadAllFeed(catUrl))
   .then(res => {
     const allItems = getAllItems(res);
-    return Promise.all(allItems.map(createItem(shopId, catId)));
+    return Promise.all(allItems.map(processItem(shopId, catId)));
   });
 }
 
