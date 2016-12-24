@@ -1,6 +1,6 @@
 const pgp = require('pg-promise')();
 const fs = require('fs');
-const connection = fs.readFileSync(`${dirname}/../pg.conf`).toString();
+const connection = fs.readFileSync(`${__dirname}/../pg.conf`).toString();
 const rp = require('request-promise');
 const db = pgp(connection);
 
