@@ -2,9 +2,16 @@ const pgp = require('pg-promise')();
 const fs = require('fs');
 const connection = fs.readFileSync(`${__dirname}/../pg.conf`).toString();
 const rp = require('request-promise');
+const Promise = require('bluebird');
+const fsa = Promise.promisifyAll(fs);
 const db = pgp(connection);
+const rootUrl = 'http://www2.hm.com';
 
 module.exports = {
+    rootUrl,
+    normalizeUrl: (path) => {
+        return `${rootUrl}${path}`;
+    },
     db,
     getShopId: (shopName) => {
         console.log('GETTING SHOP NAME');
@@ -18,6 +25,12 @@ module.exports = {
         }
     },
     fetch: (url) => {
+        // if (url === 'http://www2.hm.com/ru_ru/zhenshchiny/vybrat-kategoriyu/dresses/_jcr_content/main/productlisting.display.html?product-type=ladies_dresses&sort=stock&offset=0&page-size=30000') {
+        //     return fsa.readFileAsync(`${__dirname}/../test/fixtures/dress.html`).then(buf => buf.toString())
+        //     .catch(e => {
+        //         console.log('RAX', e);
+        //     });
+        // }
         return rp({url});
     },
     clearPrice: (str) => {
@@ -26,7 +39,9 @@ module.exports = {
     },
     notify: (str) => {
         return rp({
-            url: `http://bot.yarax.ru/send?chat=rax_test_group&message=${str}`
+            url: `http://bot.yarax.ru/send?chat=rax_test_group&message=${encodeURIComponent(str)}`
         })
+        //console.log('NOTIFY', str);
+        //return Promise.resolve(null);
     }
 }

@@ -7,7 +7,7 @@ const Promise = require('bluebird');
 const url = 'http://www2.hm.com/ru_ru/index.html';
 const catRgxp = 'ru_ru/(muzhchiny|zhenshchiny)/(.*?)/(.*?)\.html'; 
 const shopName = 'H&M';
-const {clearPrice, db, getShopId, checkDublicate, fetch, notify} = require('../../libs');
+const {normalizeUrl, clearPrice, db, getShopId, checkDublicate, fetch, notify, rootUrl} = require('../../libs');
 
 function getWatchedCategories(shopId) {
     return db.query('select id, url from categories where watch=true and shop_id=${shop_id}', {shop_id: shopId});;
@@ -22,6 +22,7 @@ function loadAllFeed(catUrl){
   return (firstPageHTML) => {
     const prodType = getProductType(firstPageHTML);
     const url = catUrl.replace(/\.html$/, `/_jcr_content/main/productlisting.display.html?product-type=${prodType}&sort=stock&offset=0&page-size=30000`);
+    console.log('ALL', url);
     return fetch(url);
   }
 }
@@ -29,7 +30,7 @@ function loadAllFeed(catUrl){
 // @TODO tests
 function getAllItems(html) {
   const $ = cheerio.load(html);
-  const blocks = $('.product-items-content div.row div.grid');
+  const blocks = $('.productlist-row .product-items-content div.row article');
   const res = [];
   blocks.each(function (i, elem) {
     const url = $(this).find('a').attr('href');
@@ -37,10 +38,13 @@ function getAllItems(html) {
     const pic = $(this).find('img').attr('src').trim();
     const priceNode = $(this).find('.product-item-price');
     let oldPrice = null;
+    let price = null;
     if ($(priceNode).find('small').length) {
       oldPrice = clearPrice($(priceNode).find('small').text());
+      price = clearPrice($(priceNode).contents().get(0).nodeValue);
+    } else {
+      price = clearPrice($(priceNode).text());
     }
-    const price = clearPrice($(priceNode).contents().get(0).nodeValue);
     res.push({
       url,
       name,
@@ -87,7 +91,7 @@ function processItem(shopId, catId) {
       if (!oldItem) {
         return createItem(item, shopId, catId);
       } else if (item.price != oldItem.price) {
-        return notify(`${item.name} has a new price ${oldItem.price}=>${item.price} ${item.url}`);
+        return notify(`${oldItem.price} => ${item.price} ${normalizeUrl(item.url)}`);
       } else {
         return null; // nothing happend
       }
@@ -105,12 +109,19 @@ function run(shopId, catId, catUrl) {
   });
 }
 
-getShopId('h&m').then(shopId => {
+const go = () => {
+  getShopId('h&m')
+  .then(shopId => {
   return getWatchedCategories(shopId).then(cats => {
     console.log(`${cats.length} watched categories`);
     return Promise.all(cats.map(cat => run(shopId, cat.id, cat.url)));
   }).then(() => {
       console.log('DONE');
   });
-})
-.catch(console.log);
+  })
+  .catch(console.log);
+}
+
+go.getAllItems = getAllItems;
+
+module.exports = go;

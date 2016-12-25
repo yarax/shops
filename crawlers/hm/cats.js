@@ -4,11 +4,10 @@ const cheerio = require('cheerio');
 const pgp = require('pg-promise')();
 const rp = require('request-promise');
 const Promise = require('bluebird');
-const shopUrl = 'http://www2.hm.com';
-const url = `${shopUrl}/ru_ru/index.html`;
+const {db, getShopId, checkDublicate, fetch, rootUrl, normalizeUrl} = require('../../libs');
+const url = `${rootUrl}/ru_ru/index.html`;
 const catRgxp = 'ru_ru/(muzhchiny|zhenshchiny)/(.*?)/(.*?)\.html'; 
 const shopName = 'H&M';
-const {db, getShopId, checkDublicate, fetch} = require('../../libs');
 let rootCats = {};
 
 function createCategory(shopId, name, url, pid) {
@@ -22,10 +21,6 @@ function createCategory(shopId, name, url, pid) {
     console.log('Created: ', name, url);
     return res[0].id;
   }).catch(checkDublicate)
-}
-
-function normalizeUrl(path) {
-  return `${shopUrl}${path}`;
 }
 
 function getParent(mask) {
