@@ -5,11 +5,9 @@ const rp = require('request-promise');
 const Promise = require('bluebird');
 const fsa = Promise.promisifyAll(fs);
 const db = pgp(connection);
-const rootUrl = 'http://www2.hm.com';
 
 module.exports = {
-    rootUrl,
-    normalizeUrl: (path) => {
+    normalizeUrl: (rootUrl, path) => {
         return `${rootUrl}${path}`;
     },
     db,
