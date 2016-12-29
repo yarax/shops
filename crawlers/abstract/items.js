@@ -27,6 +27,13 @@ function getItem(name/*: string*/, url/*: string*/, catId/*: number*/, shopId/*:
   });
 }
 
+function updateItem(id, price) {
+  return db.query('update items set price = ${price} where id = ${id}', {
+    id,
+    price
+  });
+}
+
 function createItem(item/*: Item*/, shopId/*: number*/, catId/*: number*/)/*: Promise<number>*/ {
     return db.query('insert into items (name, shop_id, cat_id, url, pic, old_price, price) values (${name}, ${shop_id}, ${cat_id}, ${url}, ${pic}, ${old_price}, ${price}) RETURNING id', {
       shop_id: shopId,
@@ -48,6 +55,7 @@ function processItem(rootUrl/*: string*/, shopId/*: number*/, catId/*: number*/)
       if (!oldItem) {
         return createItem(item, shopId, catId);
       } else if (item.price < oldItem.price) {
+        updateItem(item.id, item.price).catch(console.log);
         return notify(`${oldItem.price} => ${item.price} ${normalizeUrl(rootUrl, item.url)}`);
       } else {
         return null; // nothing happend
