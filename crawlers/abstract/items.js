@@ -10,8 +10,12 @@ function getWatchedCategories(shopId/*: number*/)/*: Promise<Array<{id: number, 
 }
 
 function getItem(name/*: string*/, url/*: string*/, catId/*: number*/, shopId/*: number*/)/*: ExistingItem*/ {
-  return db.query('select id, price, old_price from items where name=${name} and url=${url} and cat_id=${catId} and shop_id=${shopId}', {
-    name,
+  console.log('GETITEM select id, price, old_price from items where url=${url} and cat_id=${catId} and shop_id=${shopId}', {
+    url,
+    catId,
+    shopId
+  });
+  return db.query('select id, price, old_price from items where url=${url} and cat_id=${catId} and shop_id=${shopId}', {
     url,
     catId,
     shopId

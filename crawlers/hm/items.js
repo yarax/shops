@@ -5,7 +5,7 @@ const cheerio = require('cheerio');
 const pgp = require('pg-promise')();
 const rp = require('request-promise');
 const Promise = require('bluebird');
-const catRgxp = 'ru_ru/(muzhchiny|zhenshchiny)/(.*?)/(.*?)\.html'; 
+const catRgxp = 'ru_ru/(muzhchiny|zhenshchiny)/(.*?)/(.*?)\.html';
 const {normalizeUrl, clearPrice, db, getShopId, checkDublicate, fetch, notify} = require('../../libs');
 const {getWatchedCategories, go, getItem, createItem, processItem} = require('../abstract/items');
 const {rootUrl, shopName} = require('./settings');
@@ -16,7 +16,7 @@ function getProductType(firstPageHTML) {
   return $('ul[data-category-filter]').attr('data-category-filter');
 }
 
-function loadAllFeed(catUrl){
+function loadAllFeed(catUrl) {
   return (firstPageHTML) => {
     const prodType = getProductType(firstPageHTML);
     const url = catUrl.replace(/\.html$/, `/_jcr_content/main/productlisting.display.html?product-type=${prodType}&sort=stock&offset=0&page-size=30000`);
@@ -55,11 +55,15 @@ function getAllItems(html/*: string*/)/*: Item*/ {
 function grabItems(shopId, catId, catUrl) {
   const promises = [];
   return fetch(catUrl)
-  .then(loadAllFeed(catUrl))
-  .then(res => {
-    const allItems = getAllItems(res);
-    return Promise.all(allItems.map(processItem(rootUrl, shopId, catId)));
-  });
+    .catch(e => {
+      console.log(e);
+      notify(`Problem with fetching: category ${catId} ${catUrl}`)
+    })
+    .then(loadAllFeed(catUrl))
+    .then(res => {
+      const allItems = getAllItems(res);
+      return Promise.all(allItems.map(processItem(rootUrl, shopId, catId)));
+    });
 }
 
 function ex() {
