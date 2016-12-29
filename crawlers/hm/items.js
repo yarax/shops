@@ -5,9 +5,8 @@ const cheerio = require('cheerio');
 const pgp = require('pg-promise')();
 const rp = require('request-promise');
 const Promise = require('bluebird');
-const catRgxp = 'ru_ru/(muzhchiny|zhenshchiny)/(.*?)/(.*?)\.html';
-const {normalizeUrl, clearPrice, db, getShopId, checkDublicate, fetch, notify} = require('../../libs');
-const {getWatchedCategories, go, getItem, createItem, processItem} = require('../abstract/items');
+const {clearPrice, fetch, notify} = require('../../libs');
+const {go, processItem} = require('../abstract/items');
 const {rootUrl, shopName} = require('./settings');
 
 
@@ -20,7 +19,9 @@ function loadAllFeed(catUrl) {
   return (firstPageHTML) => {
     const prodType = getProductType(firstPageHTML);
     const url = catUrl.replace(/\.html$/, `/_jcr_content/main/productlisting.display.html?product-type=${prodType}&sort=stock&offset=0&page-size=30000`);
-    return fetch(url);
+    return fetch(url).catch(e => {
+      notify(`Problem fetching product list for category ${catUrl} with URL ${url}`);
+    });
   }
 }
 
