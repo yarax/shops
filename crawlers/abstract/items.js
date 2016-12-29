@@ -55,7 +55,7 @@ function processItem(rootUrl/*: string*/, shopId/*: number*/, catId/*: number*/)
       if (!oldItem) {
         return createItem(item, shopId, catId);
       } else if (item.price < oldItem.price) {
-        updateItem(item.id, item.price).catch(console.log);
+        updateItem(oldItem.id, item.price).catch(console.log);
         return notify(`${oldItem.price} => ${item.price} ${normalizeUrl(rootUrl, item.url)}`);
       } else {
         return null; // nothing happend
