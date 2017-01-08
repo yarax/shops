@@ -18,6 +18,7 @@ module.exports = {
         });
     },
     checkDublicate: (e) => {
+        console.log('dublicate');
         if (!e.message.match(/duplicate/)) {
             throw new Error(e);
         }

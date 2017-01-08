@@ -9,15 +9,22 @@ let rootCats = {};
 
 function createCategory(shopId/*: number*/, name/*: string*/, url/*: string*/, pid/*: number*/) {
   // @TODO url can be updated
-  return db.query('insert into categories (name, shop_id, pid, url) values (${name}, ${shop_id}, ${pid}, ${url}) RETURNING id', {
-    shop_id: shopId,
-    name,
-    url,
-    pid
-  }).then(res => {
-    console.log('Created: ', name, url);
-    return res[0].id;
-  }).catch(checkDublicate)
+  return db.query('select id from categories where name = ${name}', { name }).then((res) => {
+    if (res.length) {
+      return res;
+    } else {
+      return db.query('insert into categories (name, shop_id, pid, url) values (${name}, ${shop_id}, ${pid}, ${url}) RETURNING id', {
+        shop_id: shopId,
+        name,
+        url,
+        pid
+      })
+    }
+  })
+    .then(res => {
+      console.log('Created: ', name, url);
+      return res[0].id;
+    }).catch(checkDublicate)
 }
 
 function run(url/*: string*/, shopId/*: number*/, getCatLinks/*: CategoryGetLinks*/) {
