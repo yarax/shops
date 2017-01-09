@@ -1,18 +1,32 @@
 // @flow
-/*:: import type {CategoryGetLinks} from '../../types/category';*/
-const cheerio = require('cheerio');
+/*:: import type {CategoryGetLinks, LinkItem, DbCatItem} from '../../types/category';*/
 const pgp = require('pg-promise')();
 const rp = require('request-promise');
 const Promise = require('bluebird');
 const {db, getShopId, checkDublicate, fetch, normalizeUrl} = require('../../libs');
 const {rootUrl} = require('./settings');
-const {createCategory, run} = require('../abstract/cats');
+const {createCategory, run, getAllCatLinks} = require('../abstract/cats');
 const url = `${rootUrl}/ru_ru/index.html`;
+const saleUrl = `${rootUrl}/ru_ru/sale.html`;
 const catRgxp = 'ru_ru/(muzhchiny|zhenshchiny)/(.*?)/(.*?)\.html';
+const saleCatRgxp = '/ru_ru/sale/shopbyproductladies/(.*?)\.html';
 let rootCats = {};
 
+const getSalesCats = (shopId, pid) => {
+  return (html/*: string*/)/*: [DbCatItem]*/ => {
+    return getAllCatLinks(html, saleCatRgxp).map((linkItem/*: LinkItem*/) => {
+      return {
+        name: linkItem.text,
+        url: normalizeUrl(rootUrl, linkItem.link),
+        pid,
+        shop_id: shopId, 
+        handler: 'new' 
+      }
+    });
+  }
+}
 
-const getCatsWithParents = (rootCats) => {
+const getCatsWithParents = (shopId, rootCats) => {
   function getParent(mask) {
     const name = mask[1];
     if (!rootCats[name]) {
@@ -20,38 +34,49 @@ const getCatsWithParents = (rootCats) => {
     }
     return rootCats[name];
   }
-  return (html) => {
-    const res = [];
-    const $ = cheerio.load(html);
-    $('a').each(function (i, elem) {
-      const link = normalizeUrl($(this).attr('href'));
-      const text = $(this).text().trim();
-      const r = new RegExp(catRgxp);
-      const m = link.match(r);
-      if (!m) return;
-      const pid = getParent(m);
-      if (m) {
-        res.push({
-          text,
-          link,
-          pid
-        });
+  return (html/*: string*/)/*: [DbCatItem]*/ => {
+    return getAllCatLinks(html, catRgxp).map((linkItem/*: LinkItem*/) => {
+      return {
+        name: linkItem.text,
+        url: normalizeUrl(rootUrl, linkItem.link),
+        shop_id: shopId,
+        pid: getParent(linkItem.match),
+        handler: 'changes'
       }
     });
-    return res;
   }
 }
 
 function go() {
   return getShopId('h&m').then(shopId => {
     return Promise.props({
-      muzhchiny: createCategory(shopId, 'muzhchiny', 'http://www2.hm.com/ru_ru/muzhchiny.html', 0),
-      zhenshchiny: createCategory(shopId, 'zhenshchiny', 'http://www2.hm.com/ru_ru/zhenshchiny.html', 0)
+      muzhchiny: createCategory({
+        shop_id: shopId, 
+        name: 'muzhchiny', 
+        url: 'http://www2.hm.com/ru_ru/muzhchiny.html', 
+        pid: 0, 
+        handler: 'ignore'
+      }),
+      zhenshchiny: createCategory({
+        shop_id: shopId, 
+        name: 'zhenshchiny', 
+        url: 'http://www2.hm.com/ru_ru/zhenshchiny.html', 
+        pid: 0, 
+        handler: 'ignore'
+      }),
+      sale: createCategory({
+        shop_id: shopId, 
+        name: 'sale', 
+        url: saleUrl, 
+        pid: 0, 
+        handler: 'ignore'
+      }),
     })
       .then(cats => {
-        rootCats = cats;
+        rootCats = cats; 
       })
-      .then(() => run(url, shopId, getCatsWithParents(rootCats)))
+      .then(() => run(url, getCatsWithParents(shopId, rootCats)))
+      .then(() => run(saleUrl, getSalesCats(shopId, rootCats.sale)))
       .then(() => {
         console.log('Done');
       });

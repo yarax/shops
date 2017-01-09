@@ -18,10 +18,9 @@ module.exports = {
         });
     },
     checkDublicate: (e) => {
-        console.log('dublicate');
-        if (!e.message.match(/duplicate/)) {
+        //if (!e.message.match(/duplicate/)) {
             throw new Error(e);
-        }
+        //}
     },
     fetch: (url) => {
         // if (url === 'http://www2.hm.com/ru_ru/zhenshchiny/vybrat-kategoriyu/dresses/_jcr_content/main/productlisting.display.html?product-type=ladies_dresses&sort=stock&offset=0&page-size=30000') {

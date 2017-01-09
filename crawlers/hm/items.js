@@ -1,5 +1,6 @@
 // @flow
 /*:: import type {Item} from '../../types/items'; */
+/*:: import type {Handler} from '../../types/category'; */
 
 const cheerio = require('cheerio');
 const pgp = require('pg-promise')();
@@ -53,7 +54,7 @@ function getAllItems(html/*: string*/)/*: Item*/ {
   return res;
 }
 
-function grabItems(shopId, catId, catUrl) {
+function grabItems(shopId/*: number*/, catId/*: number*/, catUrl/*: string*/, handler/*: Handler*/) {
   const promises = [];
   return fetch(catUrl)
     .catch(e => {
@@ -63,7 +64,7 @@ function grabItems(shopId, catId, catUrl) {
     .then(loadAllFeed(catUrl))
     .then(res => {
       const allItems = getAllItems(res);
-      return Promise.all(allItems.map(processItem(rootUrl, shopId, catId)));
+      return Promise.all(allItems.map(processItem(rootUrl, shopId, catId, handler)));
     });
 }
 

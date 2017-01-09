@@ -1,5 +1,3 @@
-export type GrabItems = (shopId: number, categoryId: number, url: string) => any
-
 export type Item = {
   url: string,
   name: string,
