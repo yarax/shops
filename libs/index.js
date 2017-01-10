@@ -5,6 +5,8 @@ const rp = require('request-promise');
 const Promise = require('bluebird');
 const fsa = Promise.promisifyAll(fs);
 const db = pgp(connection);
+let notifications = 0;
+const limit = 10;
 
 module.exports = {
     normalizeUrl: (rootUrl, path) => {
@@ -36,6 +38,8 @@ module.exports = {
         return str.replace(/[^0-9]*/g, '');
     },
     notify: (str) => {
+        notifications++;
+        if (notifications > limit) return Promise.resolve(null);
         return rp({
             url: `http://bot.yarax.ru/send?chat=rax_test_group&message=${encodeURIComponent(str)}`
         })
