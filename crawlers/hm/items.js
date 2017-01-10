@@ -16,10 +16,16 @@ function getProductType(firstPageHTML) {
   return $('ul[data-category-filter]').attr('data-category-filter');
 }
 
-function loadAllFeed(catUrl) {
+function loadAllFeed(catUrl, handler) {
   return (firstPageHTML) => {
-    const prodType = getProductType(firstPageHTML);
-    const url = catUrl.replace(/\.html$/, `/_jcr_content/main/productlisting.display.html?product-type=${prodType}&sort=stock&offset=0&page-size=30000`);
+    const saleUrl = firstPageHTML.match(/\/ru_ru\/sale.*?display\.html/);
+    let url;
+    if (saleUrl) {
+      url = rootUrl + saleUrl[0];
+    } else {
+      const prodType = getProductType(firstPageHTML);
+      url = catUrl.replace(/\.html$/, `/_jcr_content/main/productlisting${handler === 'new' ? 'f7349' : ''}.display.html?product-type=${prodType}&sort=stock&offset=0&page-size=30000`);
+    }
     return fetch(url).catch(e => {
       notify(`Problem fetching product list for category ${catUrl} with URL ${url}`);
     });
@@ -61,7 +67,7 @@ function grabItems(shopId/*: number*/, catId/*: number*/, catUrl/*: string*/, ha
       console.log(e);
       notify(`Problem with fetching: category ${catId} ${catUrl}`)
     })
-    .then(loadAllFeed(catUrl))
+    .then(loadAllFeed(catUrl, handler))
     .then(res => {
       const allItems = getAllItems(res);
       return Promise.all(allItems.map(processItem(rootUrl, shopId, catId, handler)));

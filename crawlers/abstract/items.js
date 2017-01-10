@@ -7,7 +7,7 @@ const Promise = require('bluebird');
 const {normalizeUrl, clearPrice, db, getShopId, checkDublicate, fetch, notify} = require('../../libs');
 
 function getWatchedCategories(shopId/*: number*/)/*: Promise<any> */ {
-    return db.query('select id, url from categories where watch=true and shop_id=${shop_id}', {shop_id: shopId});
+    return db.query('select id, url, handler from categories where watch=true and shop_id=${shop_id}', {shop_id: shopId});
 }
 
 function getItem(name/*: string*/, url/*: string*/, catId/*: number*/, shopId/*: number*/)/*: ExistingItem*/ {
@@ -67,7 +67,7 @@ const go = (shopName/*: string*/, grabItems/*: (shopId: number, categoryId: numb
   getShopId(shopName)
   .then(shopId => {
   return getWatchedCategories(shopId).then((cats/*: Array<{id: number, url: string, handler: Handler}>*/) => {
-    console.log(`${cats.length} watched categories`);
+    console.log(`${cats.length} watched categories`, cats);
     return Promise.all(cats.map(cat => grabItems(shopId, cat.id, cat.url, cat.handler))); 
   }).then(() => {
       console.log('DONE');

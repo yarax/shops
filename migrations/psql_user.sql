@@ -1,4 +1,4 @@
 CREATE ROLE admin superuser;
-CREATE USER rax;
-GRANT admin TO rax;
-ALTER ROLE rax WITH LOGIN;
+CREATE USER roman;
+GRANT admin TO roman;
+ALTER ROLE roman WITH LOGIN;
