@@ -7,6 +7,7 @@ const fsa = Promise.promisifyAll(fs);
 const db = pgp(connection);
 let notifications = 0;
 const limit = 10;
+const idsHash = {};
 
 module.exports = {
     normalizeUrl: (rootUrl, path) => {
@@ -37,12 +38,16 @@ module.exports = {
         if (!str) return 0;
         return str.replace(/[^0-9]*/g, '');
     },
-    notify: (str) => {
+    // id is for caching already sent items
+    notify: (str, id) => {
         notifications++;
         if (notifications > limit) return Promise.resolve(null);
-        return rp({
-            url: `http://bot.yarax.ru/send?chat=rax_test_group&message=${encodeURIComponent(str)}`
-        })
+        if (!id || !idsHash[id]) {
+            return rp({
+                url: `http://bot.yarax.ru/send?chat=rax_test_group&message=${encodeURIComponent(str)}`
+            });
+            idsHash[id] = true;
+        }
         //console.log('NOTIFY', str);
         //return Promise.resolve(null);
     }
