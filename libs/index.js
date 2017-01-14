@@ -39,14 +39,14 @@ module.exports = {
         return str.replace(/[^0-9]*/g, '');
     },
     // id is for caching already sent items
-    notify: (str, id) => {
+    notify: (str) => {
         notifications++;
         if (notifications > limit) return Promise.resolve(null);
-        if (!id || !idsHash[id]) {
+        if (!idsHash[str]) {
             return rp({
                 url: `http://bot.yarax.ru/send?chat=rax_test_group&message=${encodeURIComponent(str)}`
             });
-            idsHash[id] = true;
+            idsHash[str] = true;
         }
         //console.log('NOTIFY', str);
         //return Promise.resolve(null);
