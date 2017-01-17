@@ -26,12 +26,6 @@ module.exports = {
         //}
     },
     fetch: (url) => {
-        // if (url === 'http://www2.hm.com/ru_ru/zhenshchiny/vybrat-kategoriyu/dresses/_jcr_content/main/productlisting.display.html?product-type=ladies_dresses&sort=stock&offset=0&page-size=30000') {
-        //     return fsa.readFileAsync(`${__dirname}/../test/fixtures/dress.html`).then(buf => buf.toString())
-        //     .catch(e => {
-        //         console.log('RAX', e);
-        //     });
-        // }
         return rp({url});
     },
     clearPrice: (str) => {
@@ -39,16 +33,14 @@ module.exports = {
         return str.replace(/[^0-9]*/g, '');
     },
     // id is for caching already sent items
-    notify: (str) => {
+    notify: (str, dIRp) => {
         notifications++;
         if (notifications > limit) return Promise.resolve(null);
         if (!idsHash[str]) {
-            return rp({
+            idsHash[str] = true;
+            return (dIRp || rp)({
                 url: `http://bot.yarax.ru/send?chat=rax_test_group&message=${encodeURIComponent(str)}`
             });
-            idsHash[str] = true;
         }
-        //console.log('NOTIFY', str);
-        //return Promise.resolve(null);
     }
 }
